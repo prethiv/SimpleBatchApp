@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:batch="http://www.springframework.org/schema/batch"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+       xsi:schemaLocation="
+           http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+           http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch.xsd
+           http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd
+http://www.springframework.org/schema/jdbc
+	http://www.springframework.org/schema/jdbc/spring-jdbc-3.2.xsd
+">
+<!--    <beans xmlns="http://www.springframework.org/schema/beans"-->
+<!--           xmlns:jdbc="http://www.springframework.org/schema/jdbc"-->
+<!--           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"-->
+<!--           xsi:schemaLocation="http://www.springframework.org/schema/beans-->
+<!--	http://www.springframework.org/schema/beans/spring-beans-3.2.xsd-->
+<!--	http://www.springframework.org/schema/jdbc-->
+<!--	http://www.springframework.org/schema/jdbc/spring-jdbc-3.2.xsd">-->
+    <!-- Job -->
+    <batch:job id="myJob">
+        <batch:step id="myStep" next="secondStep">
+            <batch:tasklet ref="myTasklet"/>
+        </batch:step>
+        <batch:step id="secondStep">
+            <batch:tasklet>
+                <batch:chunk reader="simpleReader" processor="simpleProcessor" writer="simpleWriter" commit-interval="10">
+                </batch:chunk>
+            </batch:tasklet>
+        </batch:step>
+    </batch:job>
+
+    <batch:job id="myJob1">
+        <batch:step id="myStep1">
+            <batch:tasklet ref="myTasklet1"/>
+        </batch:step>
+    </batch:job>
+
+    <bean id="simpleReader" class="com.petprojects.SimpleBatch.Tasklet.SimpleReader"></bean>
+    <bean id="simpleProcessor" class="com.petprojects.SimpleBatch.Tasklet.SimpleProcessor"></bean>
+    <bean id="simpleWriter" class="com.petprojects.SimpleBatch.Tasklet.SimpleWriter"></bean>
+
+    <bean id="jobLauncher"
+          class="org.springframework.batch.core.launch.support.SimpleJobLauncher">
+        <property name="jobRepository" ref="jobRepository" />
+
+    </bean>
+
+    <bean id="transactionManager"
+          class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource" />
+    </bean>
+
+
+    <bean name="dataSource"
+          class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+<!--        <property name="driverClassName" value="com.mysql.jdbc.Driver" />-->
+        <property name="url" value="jdbc:mysql://localhost:3306/mysqlcrudgeneric?useSSL=false" />
+        <property name="username" value="root" />
+        <property name="password" value="Mysql@191999"/>
+    </bean>
+
+
+
+<!--    <bean name="dataSource" class="com.mysql.cj.jdbc.Driver">-->
+
+<!--    </bean>-->
+
+    <bean id="jobRepository"
+          class="org.springframework.batch.core.repository.support.JobRepositoryFactoryBean">
+        <property name="dataSource" ref="dataSource" />
+        <property name="transactionManager" ref="transactionManager" />
+        <property name="databaseType" value="Mysql" />
+
+    </bean>
+    <bean id="myTasklet" class="com.petprojects.SimpleBatch.Tasklet.MyTasklet"/>
+
+    <bean id="myTasklet1" class="com.petprojects.SimpleBatch.Tasklet.MyTasklet1"/>
+
+    <jdbc:initialize-database data-source="dataSource">
+        <jdbc:script location="org/springframework/batch/core/schema-drop-mysql.sql" />
+        <jdbc:script location="org/springframework/batch/core/schema-mysql.sql" />
+    </jdbc:initialize-database>
+
+</beans>
